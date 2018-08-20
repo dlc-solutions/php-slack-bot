@@ -6,6 +6,8 @@ abstract class Base {
     private $client;
     private $user;
     private $context;
+    private $mentionOnly = false;
+    private $channel;
     abstract protected function configure();
     abstract protected function execute($message, $context);
 
@@ -16,6 +18,14 @@ abstract class Base {
 
     public function getClient() {
         return $this->client;
+    }
+
+    public function getMentionOnly() {
+        return $this->mentionOnly;
+    }
+
+    public function setMentionOnly($mentionOnly) {
+        $this->mentionOnly = $mentionOnly;
     }
 
     public function setName($name) {
@@ -50,13 +60,16 @@ abstract class Base {
         return $this->channel;
     }
 
-    protected function send($channel, $username, $message) {
+    protected function send($channel, $username, $message, $parent_thread = null) {
         $response = array(
                           'id' => time(),
                           'type' => 'message',
                           'channel' => $channel,
                           'text' => (!is_null($username) ? '<@'.$username.'> ' : '').$message
                           );
+        if ($parent_thread) {
+            $response['thread_ts'] = $parent_thread;
+        }
         $this->client->send(json_encode($response));
     }
 
@@ -69,6 +82,17 @@ abstract class Base {
         }
         return $username;
     }
+
+	protected function getUserIdFromUserName($userName) {
+		$userId = '';
+		$userName = str_replace('@', '', $userName);
+		foreach ($this->context['users'] as $user) {
+			if ($user['name'] == $userName) {
+				$userId = $user['id'];
+			}
+		}
+		return $userId;
+	}
 
     protected function getChannelIdFromChannelName($channelName) {
         $channelName = str_replace('#', '', $channelName);
