@@ -168,6 +168,14 @@ class Bot {
 
 	    $client->open();
 
+$loop->addPeriodicTimer(30, function() use($client, $logger) {
+      $client->send(json_encode(array(
+        'id' => 1,
+        'type' => 'ping',
+      )));
+       $logger->notice("Ping!");
+    });
+
         $loop->run();
     }
 
